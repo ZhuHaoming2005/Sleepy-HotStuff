@@ -1,0 +1,6 @@
+/etc/DBFile
+/etc/key
+*.log
+server
+client
+ecdsagen

@@ -1,0 +1,78 @@
+{
+   "maxBatchSize": 1,
+   "maxTxSize": 250,
+   "sleepTimer": 50,
+   "clientTimer": 10000,
+   "broadcastTimer": 10000,
+   "tParameter": 0,
+   "verbose": true,
+   "evalMode": 0,
+   "thresholdMode": 1,
+   "evalInterval" : 10,
+   "cryptoOpt": 1,
+   "local": true,
+   "maliciousNode": false,
+   "maliciousMode": 0,
+   "maliciousNID": "1,2",
+   "splitPorts": false,
+   "logOpt": 0,
+   "consensus" : 2,
+   "batchSize": 1,  
+   "RBCType" : 1,
+   "replicas": [
+      {
+         "id": "0",
+         "host": "localhost",
+         "port": "11000"
+      },
+      {
+         "id": "1",
+         "host": "localhost",
+         "port": "11001"
+      },
+      {
+         "id": "2",
+         "host": "localhost",
+         "port": "11002"
+      },
+      {
+         "id": "3",
+         "host": "localhost",
+         "port": "11003"
+      }
+   ],
+   "viewChange": false,
+   "rotatingTime": 10,
+   "persistLevel": 3,
+   "GAT": false,
+   "NumOfMal": 1,
+   "NumOfSleepy": 1,
+   "test":{
+      "testId": 2,
+      "param": {
+         "replicas": [
+            {
+               "id": "0",
+               "sleepTime": 5000,
+               "sleepSeq": 5,
+               "recMode": 0
+            },
+            {
+               "id": "2",
+               "sleepTime": 3000,
+               "sleepSeq": 5,
+               "recMode": 0
+            },
+            {
+               "id": "3",
+               "sleepTime": 3000,
+               "sleepSeq": 5,
+               "recMode": 0
+            }
+         ],
+         "NumOfActualSleep":0,
+         "sleepTime": 1,
+         "sleepSeq": 10
+      }
+   }
+}
