@@ -1,4 +1,6 @@
 consensus:
- 1: WaterBear
+ 1:
  2: HotStuff
- 3: Rondo
+ 3:
+ 4:
+ 5:

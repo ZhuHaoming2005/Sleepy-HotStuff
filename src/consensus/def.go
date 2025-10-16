@@ -78,8 +78,6 @@ func StartHandler(rid string, mem string) {
 	verbose = config.FetchVerbose()
 	sleepTimerValue = config.FetchSleepTimer()
 
-	InitializeMembership()
-
 	log.Printf("sleeptimer value %v", sleepTimerValue)
 	switch consensus {
 	case HotStuff:

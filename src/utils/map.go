@@ -2,8 +2,9 @@ package utils
 
 import (
 	"bytes"
-	"github.com/vmihailenco/msgpack/v5"
 	"sync"
+
+	"github.com/vmihailenco/msgpack/v5"
 )
 
 type StringBoolMap struct {

@@ -16,7 +16,6 @@ import (
 	"sleepy-hotstuff/src/consensus"
 	"sleepy-hotstuff/src/cryptolib"
 	"sleepy-hotstuff/src/db"
-	"sleepy-hotstuff/src/hacss"
 	logging "sleepy-hotstuff/src/logging"
 	pb "sleepy-hotstuff/src/proto/communication"
 	"sleepy-hotstuff/src/utils"
@@ -82,15 +81,6 @@ func HandleRequest(in *pb.Request) (*pb.RawMessage, error) {
 		reply := []byte("batch rep")
 
 		return &pb.RawMessage{Msg: reply}, nil
-	case pb.MessageType_RECONSTRUCT:
-		go hacss.HandleReconstructMsg(in.GetRequest())
-
-		reply := []byte("rep")
-		return &pb.RawMessage{Msg: reply}, nil
-	case pb.MessageType_TEST_HACSS:
-		go consensus.HandleTestHacssMsg(in.GetRequest())
-		reply := []byte("rep")
-		return &pb.RawMessage{Msg: reply}, nil
 	default:
 		h := cryptolib.GenHash(in.GetRequest())
 		// hash is actually not used in consensus.HandleRequest
@@ -114,7 +104,7 @@ func (s *server) ABASendByteMsg(ctx context.Context, in *pb.RawMessage) (*pb.Emp
 }
 
 func (s *server) HACSSSendByteMsg(ctx context.Context, in *pb.RawMessage) (*pb.Empty, error) {
-	go hacss.HandleHACSSMsg(in.GetMsg())
+	// go hacss.HandleHACSSMsg(in.GetMsg())
 	return &pb.Empty{}, nil
 }
 

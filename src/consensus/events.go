@@ -2,15 +2,15 @@ package consensus
 
 import (
 	"fmt"
-	"github.com/vmihailenco/msgpack/v5"
 	"log"
 	"sleepy-hotstuff/src/config"
 	"sleepy-hotstuff/src/db"
-	"sleepy-hotstuff/src/hacss"
 	"sleepy-hotstuff/src/logging"
 	"sleepy-hotstuff/src/quorum"
 	"sleepy-hotstuff/src/utils"
 	"time"
+
+	"github.com/vmihailenco/msgpack/v5"
 )
 
 var verbose bool //verbose level
@@ -185,12 +185,6 @@ func HandleBatchRequest(requests []byte) {
 	requestSize = len(requestArr[0])
 	queue.AppendBatch(requestArr)
 	db.PersistValue("queue", &queue, db.PersistAll)
-}
-
-// HandleTestHacssMsg start a hacss with a random secret.
-func HandleTestHacssMsg(inputMsg []byte) {
-	log.Printf("Handling test request.")
-	hacss.StartHACSS(GetInstanceID(int(id)), nil)
 }
 
 func DeserializeRequests(input []byte) [][]byte {

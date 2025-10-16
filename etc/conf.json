@@ -1,12 +1,12 @@
 {
-   "maxBatchSize": 1000,
+   "maxBatchSize": 1,
    "maxTxSize": 250,
    "sleepTimer": 50,
    "clientTimer": 10000,
    "broadcastTimer": 10000,
    "tParameter": 0,
-   "verbose": false,
-   "evalMode": 1,
+   "verbose": true,
+   "evalMode": 0,
    "thresholdMode": 1,
    "evalInterval" : 10,
    "cryptoOpt": 1,
@@ -39,15 +39,56 @@
          "id": "3",
          "host": "localhost",
          "port": "11003"
+      },
+      {
+         "id": "4",
+         "host": "localhost",
+         "port": "11004"
+      },
+      {
+         "id": "5",
+         "host": "localhost",
+         "port": "11005"
       }
    ],
-   "viewChange": false,
+   "viewChange": true,
    "rotatingTime": 10,
-   "persistLevel": 1,
+   "persistLevel": 3,
    "GAT": false,
    "NumOfMal": 1,
    "NumOfSleepy": 1,
    "test":{
-      "testId": 0
+      "testId": 4,
+      "param": {
+         "replicas": [
+            {
+               "id": "0",
+               "sleepTime": 3000,
+               "sleepSeq": 5,
+               "recMode": 0
+            },
+            {
+               "id": "3",
+               "sleepTime": 4000,
+               "sleepSeq": 5,
+               "recMode": 2
+            },
+            {
+               "id": "4",
+               "sleepTime": 3000,
+               "sleepSeq": 5,
+               "recMode": 0
+            },
+            {
+               "id": "5",
+               "sleepTime": 3000,
+               "sleepSeq": 5,
+               "recMode": 0
+            }
+         ],
+         "NumOfActualSleep":0,
+         "sleepTime": 1,
+         "sleepSeq": 10
+      }
    }
 }

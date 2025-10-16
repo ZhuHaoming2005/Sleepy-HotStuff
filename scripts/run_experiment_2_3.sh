@@ -1,6 +1,6 @@
 #!/bin/bash
 
-EXPERIMENT_DIR="./experiments/double_spending/Koala-2"
+EXPERIMENT_DIR="./experiments/double_spending/HotStuff-InMem"
 mkdir -p "$EXPERIMENT_DIR"
 OUTPUT_DIR="${EXPERIMENT_DIR}/output"
 mkdir -p "$OUTPUT_DIR"

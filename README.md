@@ -532,7 +532,7 @@ throughput(tps):17784.372641509435, latency(ms):168.97549019607843
 
 该脚本将：
 1.  将系统配置为 Sleepy HotStuff-MinSS。
-2.  启动 4 个副本。每个副本的输出会重定向到独立的日志文件（如 `experiments/double_spending/HS-mSS/output/server_0.log`）。
+2.  启动 4 个副本。每个副本的输出会重定向到独立的日志文件（如 `experiments/double_spending/HotStuff-MinSS/output/server_0.log`）。
 3.  模拟客户端发送两笔相互冲突的交易（账户 `0` -> `1` 与账户 `0` -> `2`）。
 4.  使其中一个副本（副本 2）“睡眠”并“唤醒”，以模拟重启。
 
@@ -578,7 +578,7 @@ throughput(tps):17784.372641509435, latency(ms):168.97549019607843
 
 该脚本将：
 1.  将系统配置为 Sleepy HotStuff-InMem。
-2.  启动 6 个副本。每个副本的输出会重定向到独立的日志文件（如 `experiments/double_spending/Koala-2/output/server_0.log`）。
+2.  启动 6 个副本。每个副本的输出会重定向到独立的日志文件（如 `experiments/double_spending/HotStuff-InMem/output/server_0.log`）。
 3.  模拟客户端发送两笔相互冲突的交易（账户 `0` -> `1` 与账户 `0` -> `2`）。
 4.  使其中一个副本（副本 3）“睡眠”并“唤醒”，以模拟重启。
 
