@@ -94,12 +94,7 @@ sudo apt install -y python3-pip git wget zip unzip vim curl psmisc
     cd Sleepy-HotStuff
     ```
 
-2.  **切换到稳定版本。**
-    ```bash
-    git checkout ndss-ae-2
-    ```
-
-3.  **运行构建脚本。**
+2.  **运行构建脚本。**
     该仓库提供两种构建脚本，可按需选择。
 
     *   **选项 A：在线构建**
@@ -126,7 +121,7 @@ sudo apt install -y python3-pip git wget zip unzip vim curl psmisc
 
 可以在 `etc/conf.json` 中配置服务器实例。启动服务器前，需在该文件中设置其 ID、主机与端口。
 
-1.  **配置服务器副本**
+1.  **配置服务器节点**
 
     打开 `etc/conf.json`，编辑 `replicas` 数组。数组中的每个对象代表一个可启动的服务器实例。
 
@@ -171,7 +166,7 @@ sudo apt install -y python3-pip git wget zip unzip vim curl psmisc
 
     | 参数               | 类型/取值              | 说明                                                                                                      |
     | ------------------ | ---------------------- | --------------------------------------------------------------------------------------------------------- |
-    | `[client-id]`      | Integer                | 用于标识该客户端的唯一正整数。不得与任何服务器副本 ID 冲突。                                              |
+    | `[client-id]`      | Integer                | 用于标识该客户端的唯一正整数。不得与任何服务器节点 ID 冲突。                                              |
     | `[operation-type]` | `0` 或 `1`             | 指定要执行的操作类型：<br> • `0`：单次写入。<br> • `1`：批量写入。                                         |
     | `[batch-size]`     | Integer                | 要执行的操作数量。单次写入通常为 `1`；批量写入为批量大小。                                                |
 
@@ -191,7 +186,7 @@ sudo apt install -y python3-pip git wget zip unzip vim curl psmisc
 
 ### 一个可运行的示例：启动四个服务器与一个客户端
 
-您可以直接使用提供的 `etc/conf.json`（已预配置为四个服务器），或按需修改，但需确保 `replicas` 数组仍定义四个副本。
+您可以直接使用提供的 `etc/conf.json`（已预配置为四个服务器），或按需修改，但需确保 `replicas` 数组仍定义四个节点。
 
 例如：
 
@@ -331,7 +326,7 @@ killall client
 
 该实验评估 HotStuff 在不同存储选项下的性能。
 
-本实验在本机运行 4 个服务器副本与 1 个客户端进程。每个副本的详细日志存放于 `var` 目录，该目录与项目根目录（`Sleepy-HotStuff`）同级。具体地，副本 N 的输出日志位于 `var/log/N/date_Eva.log`。
+本实验在本机运行 4 个服务器节点与 1 个客户端进程。每个节点的详细日志存放于 `var` 目录，该目录与项目根目录（`Sleepy-HotStuff`）同级。具体地，节点 N 的输出日志位于 `var/log/N/date_Eva.log`。
 
 #### 实验 1.1：所有参数存于稳定存储
 
@@ -378,7 +373,7 @@ throughput(tps):2027.004716981132, latency(ms):2114.544117647059
 
 > **注意：** 吞吐与延迟的具体数值可能因硬件与负载略有差异。若未打印 `seq=55` 的性能行，可能是等待时间不足，请尝试使用更长的等待时间（如 `./scripts/run_experiment_1.sh 1 70`）。
 
-#### 实验 1.2：最少参数存于稳定存储
+#### 实验 1.2：最少参数存于稳定存储 (Sleepy-HotStuff-MinSS协议)
 
 该子实验评估仅将最少共识参数存入稳定存储时的性能。
 
@@ -482,17 +477,17 @@ throughput(tps):17784.372641509435, latency(ms):168.97549019607843
 
 该脚本将：
 1.  将系统配置为无稳定存储的 HotStuff。
-2.  启动 4 个副本。每个副本的输出会重定向到独立的日志文件（如 `experiments/double_spending/HS-nSS/output/server_0.log`）。
+2.  启动 4 个节点。每个节点的输出会重定向到独立的日志文件（如 `experiments/double_spending/HS-nSS/output/server_0.log`）。
 3.  模拟客户端发送两笔相互冲突的交易（账户 `0` -> `1` 与账户 `0` -> `2`）。
-4.  使其中一个副本（副本 2）“睡眠”并“唤醒”，以模拟重启。
+4.  使其中一个节点（节点 2）“睡眠”并“唤醒”，以模拟重启。
 
 **预期结果**
 
-脚本首先会显示配置与客户端提交交易的过程。关键部分是瞌睡副本（副本 2）的日志，日志会打印到控制台。
+脚本首先会显示配置与客户端提交交易的过程。关键部分是睡眠节点（节点 2）的日志，日志会打印到控制台。
 
 您应观察到如下事件序列，以确认**双花攻击成功**：
 
-1.  **首先，副本在进入睡眠前，在高度为 1 的区块中提交第一笔交易（`0 -> 1`）。**
+1.  **首先，节点在进入睡眠前，在高度为 1 的区块中提交第一笔交易（`0 -> 1`）。**
     注意包含交易 `{"From":"0","To":"1","Value":40}` 的区块输出，随后会出现 “Falling asleep” 提示。
 
     ```
@@ -503,7 +498,7 @@ throughput(tps):17784.372641509435, latency(ms):168.97549019607843
     13:39:41 Falling asleep in sequence 5...
     ```
 
-2.  **重启后，该副本遗忘之前的状态，并在高度为 1 的区块中提交一笔冲突交易（`0 -> 2`）。**
+2.  **重启后，该节点遗忘之前的状态，并在高度为 1 的区块中提交一笔冲突交易（`0 -> 2`）。**
     注意 “Wake up” 提示，随后会有一个新的已提交区块，其中包含交易 `{"From":"0","To":"2","Value":40}`。
 
     ```
@@ -516,11 +511,11 @@ throughput(tps):17784.372641509435, latency(ms):168.97549019607843
     13:39:46 {"View":0,"Height":1,"TXS":[...,{"ID":100,"TX":{"From":"0","To":"2","Value":40"},"Timestamp":1752586786370}]}
     ```
 
-该序列表明瞌睡副本在相同高度上提交了两个冲突区块，证实了无稳定存储的 HotStuff 存在双花漏洞。
+该序列表明睡眠节点在相同高度上提交了两个冲突区块，证实了无稳定存储的 HotStuff 存在双花漏洞。
 
-#### 实验 2.2：攻击 Sleepy HotStuff-MinSS
+#### 实验 2.2：攻击 Sleepy-HotStuff-MinSS
 
-该子实验展示我们的 Sleepy HotStuff-MinSS 协议可以抵御双花攻击。
+该子实验展示我们的 Sleepy-HotStuff-MinSS 协议可以抵御双花攻击。
 
 **操作步骤**
 
@@ -531,14 +526,14 @@ throughput(tps):17784.372641509435, latency(ms):168.97549019607843
 ```
 
 该脚本将：
-1.  将系统配置为 Sleepy HotStuff-MinSS。
-2.  启动 4 个副本。每个副本的输出会重定向到独立的日志文件（如 `experiments/double_spending/HotStuff-MinSS/output/server_0.log`）。
+1.  将系统配置为 Sleepy-HotStuff-MinSS。
+2.  启动 4 个节点。每个节点的输出会重定向到独立的日志文件（如 `experiments/double_spending/HotStuff-MinSS/output/server_0.log`）。
 3.  模拟客户端发送两笔相互冲突的交易（账户 `0` -> `1` 与账户 `0` -> `2`）。
-4.  使其中一个副本（副本 2）“睡眠”并“唤醒”，以模拟重启。
+4.  使其中一个节点（节点 2）“睡眠”并“唤醒”，以模拟重启。
 
 **预期结果**
 
-1.  **入睡前：** 副本提交第一笔交易（`0 -> 1`）。
+1.  **入睡前：** 节点提交第一笔交易（`0 -> 1`）。
     ```
     13:58:35 [!!!] Ready to output a value for height 2
     ...
@@ -547,7 +542,7 @@ throughput(tps):17784.372641509435, latency(ms):168.97549019607843
     13:58:35 Falling asleep in sequence 5...
     ```
 
-2.  **重启后：** 副本依据稳定存储中的参数安全恢复。它知道自己曾处于视图 0，并发起到视图 1 的视图变更。
+2.  **重启后：** 节点依据稳定存储中的参数安全恢复。它知道自己曾处于视图 0，并发起到视图 1 的视图变更。
     ```
     13:58:38 Wake up...
     13:58:38 Start the recovery process.
@@ -564,9 +559,9 @@ throughput(tps):17784.372641509435, latency(ms):168.97549019607843
     ...
     ```
 
-#### 实验 2.3：攻击 Sleepy HotStuff-InMem
+#### 实验 2.3：攻击 Sleepy-HotStuff-InMem
 
-该子展示我们的 Sleepy HotStuff-InMem 协议可以抵御双花攻击。
+该子展示我们的 Sleepy-HotStuff-InMem 协议可以抵御双花攻击。
 
 **操作步骤**
 
@@ -577,14 +572,14 @@ throughput(tps):17784.372641509435, latency(ms):168.97549019607843
 ```
 
 该脚本将：
-1.  将系统配置为 Sleepy HotStuff-InMem。
-2.  启动 6 个副本。每个副本的输出会重定向到独立的日志文件（如 `experiments/double_spending/HotStuff-InMem/output/server_0.log`）。
+1.  将系统配置为 Sleepy-HotStuff-InMem。
+2.  启动 6 个节点。每个节点的输出会重定向到独立的日志文件（如 `experiments/double_spending/HotStuff-InMem/output/server_0.log`）。
 3.  模拟客户端发送两笔相互冲突的交易（账户 `0` -> `1` 与账户 `0` -> `2`）。
-4.  使其中一个副本（副本 3）“睡眠”并“唤醒”，以模拟重启。
+4.  使其中一个节点（节点 3）“睡眠”并“唤醒”，以模拟重启。
 
 **预期结果**
 
-1.  **入睡前：** 副本提交第一笔交易（`0 -> 1`）。
+1.  **入睡前：** 节点提交第一笔交易（`0 -> 1`）。
     ```
     14:17:50 [!!!] Ready to output a value for height 2
     14:17:50 {"View":0,"Height":0,"TXS":[{"ID":0,"TX":{"From":"","To":"0","Value":50},"Timestamp":0}]}
@@ -593,7 +588,7 @@ throughput(tps):17784.372641509435, latency(ms):168.97549019607843
     14:17:50 Falling asleep in sequence 5...
     ```
 
-2.  **重启后：** 副本被唤醒并启动 Sleepy HotStuff-InMem 恢复协议。您将看到与该协议相关的特定日志，例如 ECHO1 与 ECHO2 消息。
+2.  **重启后：** 节点被唤醒并启动 Sleepy-HotStuff-InMem 恢复协议。您将看到与该协议相关的特定日志，例如 ECHO1 与 ECHO2 消息。
     ```
     14:17:54 Wake up...
     14:17:54 Start the recovery process.
