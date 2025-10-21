@@ -2,8 +2,10 @@ package consensus
 
 import (
 	"bytes"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"sleepy-hotstuff/src/communication"
 	"sleepy-hotstuff/src/communication/sender"
@@ -508,6 +510,115 @@ func outputBlockchain(height int, blockchain utils.IntByteMap) error {
 	return nil
 }
 
+func saveCommittedBlocksToFile() error {
+	type TX struct {
+		ID        int64  `json:"id"`
+		From      string `json:"from"`
+		To        string `json:"to"`
+		Value     int    `json:"value"`
+		Timestamp int64  `json:"timestamp"`
+	}
+	type Block struct {
+		View       int    `json:"view"`
+		Height     int    `json:"height"`
+		Hash       string `json:"hash"`
+		PreHash    string `json:"prehash"`
+		TXS        []TX   `json:"transactions"`
+	}
+	type Blockchain struct {
+		Blocks []Block `json:"blocks"`
+	}
+
+	blockchain := Blockchain{
+		Blocks: make([]Block, 0),
+	}
+
+	genesisBlock := Block{
+		View:       0,
+		Height:     0,
+		Hash:       "",
+		PreHash:    "",
+		TXS: []TX{
+			{
+				ID:        0,
+				From:      "",
+				To:        "0",
+				Value:     50,
+				Timestamp: 0,
+			},
+		},
+	}
+	blockchain.Blocks = append(blockchain.Blocks, genesisBlock)
+
+	tsmap := utils.IntBoolMap{}
+	tsmap.Init()
+
+	length := committedBlocks.GetLen()
+	for i := 1; i <= length; i++ {
+		bser, exist := committedBlocks.Get(i)
+		if !exist {
+			continue
+		}
+
+		b := message.DeserializeQCBlock(bser)
+		txs := make([]TX, 0)
+
+		for j := 0; j < len(b.TXS); j++ {
+			var cr message.ClientRequest
+			cr = message.DeserializeClientRequest(b.TXS[j].Msg)
+			
+			_, ex := tsmap.Get(int(cr.TS))
+			if ex {
+				continue
+			}
+			tsmap.Insert(int(cr.TS), true)
+
+			var tx TX
+			tx.ID = cr.ID
+			tx.Timestamp = cr.TS
+			
+			var transaction message.Transaction
+			err := transaction.Deserialize(cr.OP)
+			if err != nil {
+				log.Printf("Error deserializing transaction at height:%d", i)
+				tx.From = ""
+				tx.To = ""
+				tx.Value = 0
+			} else {
+				tx.From = transaction.From
+				tx.To = transaction.To
+				tx.Value = transaction.Value
+			}
+			
+			txs = append(txs, tx)
+		}
+
+		block := Block{
+			View:       b.View,
+			Height:     b.Height,
+			Hash:       hex.EncodeToString(b.Hash),
+			PreHash:    hex.EncodeToString(b.PreHash),
+			TXS:        txs,
+		}
+		blockchain.Blocks = append(blockchain.Blocks, block)
+	}
+
+	jsonData, err := json.MarshalIndent(blockchain, "", "  ")
+	if err != nil {
+		log.Printf("Error marshaling committedBlocks to JSON: %v", err)
+		return err
+	}
+
+	filename := fmt.Sprintf("./etc/output/committedBlocks_%d.json", id)
+	err = ioutil.WriteFile(filename, jsonData, 0644)
+	if err != nil {
+		log.Printf("Error writing committedBlocks to file: %v", err)
+		return err
+	}
+
+	return nil
+}
+
 func ProcessQCInfo(hash string, blockinfo message.QCBlock, content message.HotStuffMessage) {
 	if blockinfo.Height >= 2 {
 		if blockinfo.Height <= curBlock.Height {
@@ -530,6 +641,7 @@ func ProcessQCInfo(hash string, blockinfo message.QCBlock, content message.HotSt
 						log.Printf("[!!!] Error processing block seq %d: %v", content.Seq, err)
 					}
 				}
+				go saveCommittedBlocksToFile()
 			}
 			// log.Printf("blockinfo height: %d, lockedblock height: %d, curBlock height: %d", blockinfo.Height, lockedBlock.Height, curBlock.Height)
 			lqcLock.RUnlock()
