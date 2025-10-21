@@ -588,7 +588,7 @@ func saveCommittedBlocksToFile() error {
 			var transaction message.Transaction
 			err := transaction.Deserialize(cr.OP)
 			if err != nil {
-				log.Printf("Error deserializing transaction at height:%d", i)
+				// log.Printf("Error deserializing transaction at height:%d", i)
 				tx.From = ""
 				tx.To = ""
 				tx.Value = 0
