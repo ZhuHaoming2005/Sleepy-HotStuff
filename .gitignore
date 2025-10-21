@@ -1,5 +1,6 @@
 /etc/DBFile
 /etc/key
+/etc/output
 *.log
 server
 client

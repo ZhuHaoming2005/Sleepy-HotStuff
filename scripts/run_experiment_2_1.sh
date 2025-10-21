@@ -33,6 +33,12 @@ echo
 echo "[Start Client] start the client and send two double-spending transactions."
 ./client 100 0 1 f0t1v40f1t2v40
 sleep 5
+
+# Run fork detection visualization
+echo
+echo "[Fork Analysis] Running fork visualization..."
+python3 ./scripts/visualize_fork_detection.py
+
 echo
 ./client 100 0 1 f0t2v40
 
@@ -49,5 +55,10 @@ echo
 echo "[Kill Process] kill all server and client"
 killall server
 killall client
+
+# Run fork detection visualization
+echo
+echo "[Fork Analysis] Running fork visualization..."
+python3 ./scripts/visualize_fork_detection.py
 
 wait

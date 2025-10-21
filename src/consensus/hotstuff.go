@@ -39,6 +39,7 @@ var awaitingDecision utils.IntByteMap
 var awaitingDecisionCopy utils.IntByteMap
 
 var committedBlocks utils.IntByteMap // record the committed block history.
+var receivedBlocksSet sync.Map // record all received block proposals (key: hash_string, value: serialized HotStuffMessage)
 
 var vcAwaitingVotes utils.IntIntMap
 var vcTime int64
@@ -373,6 +374,10 @@ func HandleNormalMsg(content message.HotStuffMessage) { //For replica to process
 	p := fmt.Sprintf("[QC] HotStuff processing QC proposed at height %d", content.Seq)
 	logging.PrintLog(verbose, logging.NormalLog, p)
 
+	// Store all received blocks in set (key: hash, no duplicates)
+	contentSer, _ := content.Serialize()
+	receivedBlocksSet.Store(hash, contentSer)
+
 	ProcessQCInfo(hash, blockinfo, content)
 	msg := message.HotStuffMessage{
 		Mtype:  pb.MessageType_QCREP,
@@ -510,24 +515,27 @@ func outputBlockchain(height int, blockchain utils.IntByteMap) error {
 	return nil
 }
 
+type TX struct {
+	ID        int64  `json:"id"`
+	From      string `json:"from"`
+	To        string `json:"to"`
+	Value     int    `json:"value"`
+	Timestamp int64  `json:"timestamp"`
+}
+
+type Block struct {
+	View       int    `json:"view"`
+	Height     int    `json:"height"`
+	Hash       string `json:"hash"`
+	PreHash    string `json:"prehash"`
+	TXS        []TX   `json:"transactions"`
+}
+
+type Blockchain struct {
+	Blocks []Block `json:"blocks"`
+}
+
 func saveCommittedBlocksToFile() error {
-	type TX struct {
-		ID        int64  `json:"id"`
-		From      string `json:"from"`
-		To        string `json:"to"`
-		Value     int    `json:"value"`
-		Timestamp int64  `json:"timestamp"`
-	}
-	type Block struct {
-		View       int    `json:"view"`
-		Height     int    `json:"height"`
-		Hash       string `json:"hash"`
-		PreHash    string `json:"prehash"`
-		TXS        []TX   `json:"transactions"`
-	}
-	type Blockchain struct {
-		Blocks []Block `json:"blocks"`
-	}
 
 	blockchain := Blockchain{
 		Blocks: make([]Block, 0),
@@ -619,6 +627,90 @@ func saveCommittedBlocksToFile() error {
 	return nil
 }
 
+func saveReceivedBlocksToFile() error {
+	blockchain := Blockchain{
+		Blocks: make([]Block, 0),
+	}
+
+	// Iterate through all received blocks in the set
+	receivedBlocksSet.Range(func(key, value interface{}) bool {
+		msgBytes := value.([]byte)
+		msg := message.DeserializeHotStuffMessage(msgBytes)
+		
+		txs := make([]TX, 0)
+		
+		// Add base transaction (coinbase) similar to QCBlock construction
+		baseTx := TX{
+			ID:        msg.Source,
+			From:      "",
+			To:        strconv.Itoa(int(msg.Source)),
+			Value:     50,
+			Timestamp: msg.TS,
+		}
+		txs = append(txs, baseTx)
+		
+		// Parse transactions from OPS (similar to how committedBlocks parses from TXS)
+		for _, op := range msg.OPS {
+			// Get the message bytes from RawMessage
+			msgWithSigBytes := op.GetMsg()
+			if msgWithSigBytes == nil || len(msgWithSigBytes) == 0 {
+				continue
+			}
+			
+			// Deserialize to MessageWithSignature
+			msgWithSig := message.DeserializeMessageWithSignature(msgWithSigBytes)
+			
+			// Deserialize to ClientRequest
+			cr := message.DeserializeClientRequest(msgWithSig.Msg)
+			
+			// Deserialize transaction data
+			var txData message.Transaction
+			if err := txData.Deserialize(cr.OP); err == nil {
+				tx := TX{
+					ID:        cr.ID,
+					From:      txData.From,
+					To:        txData.To,
+					Value:     txData.Value,
+					Timestamp: cr.TS,
+				}
+				txs = append(txs, tx)
+			}
+		}
+
+		// Get PreHash from parent block (QC field contains parent block info)
+		preHashStr := ""
+		if msg.QC != nil && len(msg.QC) > 0 {
+			parentBlock := message.DeserializeQCBlock(msg.QC)
+			preHashStr = hex.EncodeToString(parentBlock.Hash)
+		}
+
+		block := Block{
+			View:       msg.View,
+			Height:     msg.Seq,
+			Hash:       hex.EncodeToString(msg.Hash),
+			PreHash:    preHashStr,
+			TXS:        txs,
+		}
+		blockchain.Blocks = append(blockchain.Blocks, block)
+		return true
+	})
+
+	jsonData, err := json.MarshalIndent(blockchain, "", "  ")
+	if err != nil {
+		log.Printf("Error marshaling receivedBlocks to JSON: %v", err)
+		return err
+	}
+
+	filename := fmt.Sprintf("./etc/output/receivedBlocks_%d.json", id)
+	err = ioutil.WriteFile(filename, jsonData, 0644)
+	if err != nil {
+		log.Printf("Error writing receivedBlocks to file: %v", err)
+		return err
+	}
+
+	return nil
+}
+
 func ProcessQCInfo(hash string, blockinfo message.QCBlock, content message.HotStuffMessage) {
 	if blockinfo.Height >= 2 {
 		if blockinfo.Height <= curBlock.Height {
@@ -642,6 +734,7 @@ func ProcessQCInfo(hash string, blockinfo message.QCBlock, content message.HotSt
 					}
 				}
 				go saveCommittedBlocksToFile()
+				go saveReceivedBlocksToFile()
 			}
 			// log.Printf("blockinfo height: %d, lockedblock height: %d, curBlock height: %d", blockinfo.Height, lockedBlock.Height, curBlock.Height)
 			lqcLock.RUnlock()
